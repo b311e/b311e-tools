@@ -22,31 +22,62 @@ except ImportError:
     import requests
     import pandas as pd
 
-CACHE_FILE = "url_cache.json"
-CDX_URL = (
-    "http://web.archive.org/cdx/search/cdx"
-    "?url=leg.state.co.us/*"
-    "&output=text"
-    "&fl=original"
-    "&collapse=urlkey"
-    "&limit=50000"
-)
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; leg-state-co-us-dashboard/1.0)"}
+DEFAULT_DOMAIN = "leg.state.co.us"
+HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; url-dashboard/1.0)"}
 
-st.set_page_config(page_title="leg.state.co.us Inventory", layout="wide")
+def cache_file_for(domain):
+    safe = re.sub(r"[^\w.-]", "_", domain)
+    return f"url_cache_{safe}.json"
+
+def cdx_url_for(domain):
+    return (
+        "http://web.archive.org/cdx/search/cdx"
+        f"?url={domain}/*"
+        "&output=text"
+        "&fl=original"
+        "&collapse=urlkey"
+        "&limit=50000"
+    )
+
+st.set_page_config(page_title="Domain URL Inventory", layout="centered")
 
 st.markdown("""
 <style>
-    .stApp { background-color: #f8f7f4; }
+    /* Primary button — WCAG AA compliant (contrast ratio ~4.6:1) */
+    button[kind="primary"] {
+        background-color: #217645 !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    button[kind="primary"]:hover {
+        background-color: #1a5e37 !important;
+    }
+    button[kind="primary"]:focus-visible {
+        outline: 3px solid #217645 !important;
+        outline-offset: 2px !important;
+    }
+    /* Secondary buttons — ensure visible focus ring */
+    button[kind="secondary"]:focus-visible {
+        outline: 3px solid #1a5276 !important;
+        outline-offset: 2px !important;
+    }
     .metric-card {
-        background: white;
         border-radius: 2px;
         padding: 1.2rem 1.5rem;
         border: 1px solid #e0ddd8;
     }
-    .status-live { color: #2d6a2d; background: #e8f5e8; padding: 2px 8px; border-radius: 2px; font-size: 0.85em; font-weight: 600; }
-    .status-dead { color: #8b1a1a; background: #fde8e8; padding: 2px 8px; border-radius: 2px; font-size: 0.85em; font-weight: 600; }
-    .status-error { color: #5c4a00; background: #fff8e0; padding: 2px 8px; border-radius: 2px; font-size: 0.85em; font-weight: 600; }
+    /* Status badges — WCAG AA compliant contrast */
+    .status-live { color: #1b5e1b; background: #e8f5e8; padding: 2px 8px; border-radius: 2px; font-size: 1em; font-weight: 600; }
+    .status-dead { color: #7a1414; background: #fde8e8; padding: 2px 8px; border-radius: 2px; font-size: 1em; font-weight: 600; }
+    .status-error { color: #4a3b00; background: #fff8e0; padding: 2px 8px; border-radius: 2px; font-size: 1em; font-weight: 600; }
+    /* Section headings (h2) */
+    h2 {
+        font-size: 1.2rem !important;
+        font-weight: 600 !important;
+        color: inherit !important;
+        margin-top: 0.5rem !important;
+        margin-bottom: 0.5rem !important;
+    }
     div[data-testid="stProgress"] > div { background-color: #1a4a7a; }
 </style>
 """, unsafe_allow_html=True)
@@ -54,23 +85,23 @@ st.markdown("""
 
 # --- Cache helpers ---
 
-def load_cache():
-    if os.path.exists(CACHE_FILE):
-        with open(CACHE_FILE) as f:
+def load_cache(cache_file):
+    if os.path.exists(cache_file):
+        with open(cache_file) as f:
             return json.load(f)
     return None
 
-def save_cache(data):
-    with open(CACHE_FILE, "w") as f:
+def save_cache(data, cache_file):
+    with open(cache_file, "w") as f:
         json.dump(data, f)
 
 
 # --- CDX fetch ---
 
-def fetch_cdx(progress_callback=None):
+def fetch_cdx(domain, progress_callback=None):
     for attempt in range(3):
         try:
-            resp = requests.get(CDX_URL, headers=HEADERS, timeout=120, stream=True)
+            resp = requests.get(cdx_url_for(domain), headers=HEADERS, timeout=120, stream=True)
             resp.raise_for_status()
             lines = []
             for line in resp.iter_lines():
@@ -102,6 +133,37 @@ def check_url(url):
         return f"ERROR: {e}"
 
 
+HTTP_STATUS_DESCRIPTIONS = {
+    200: "OK",
+    201: "Created",
+    204: "No Content",
+    301: "Moved Permanently",
+    302: "Found (Temporary Redirect)",
+    303: "See Other",
+    304: "Not Modified",
+    307: "Temporary Redirect",
+    308: "Permanent Redirect",
+    400: "Bad Request",
+    401: "Unauthorized",
+    403: "Forbidden",
+    404: "Not Found",
+    405: "Method Not Allowed",
+    408: "Request Timeout",
+    410: "Gone",
+    429: "Too Many Requests",
+    500: "Internal Server Error",
+    502: "Bad Gateway",
+    503: "Service Unavailable",
+    504: "Gateway Timeout",
+}
+
+def status_label(code):
+    if isinstance(code, int):
+        desc = HTTP_STATUS_DESCRIPTIONS.get(code, "Unknown")
+        return f"{code} {desc}"
+    return str(code)
+
+
 def relative_path(url):
     return urlparse(url).path.rstrip("/") or "/"
 
@@ -120,32 +182,34 @@ def file_ext(path):
 
 # --- Main app ---
 
-st.title("🏛️ CLICS URL Inventory")
-st.caption("leg.state.co.us — Wayback Machine CDX + live status checker")
+st.title("Domain URL Inventory")
+st.caption("Wayback Machine CDX + live status checker")
 
-cache = load_cache()
+domain = st.text_input("Domain to scan", value=DEFAULT_DOMAIN, placeholder="example.com")
+cache_file = cache_file_for(domain)
+cache = load_cache(cache_file)
 
 col_info, col_run = st.columns([3, 1])
 with col_info:
     if cache:
-        st.info(f"Last run: **{cache.get('timestamp', 'unknown')}** — {len(cache.get('results', []))} URLs checked")
+        st.info(f"Last run: **{cache.get('timestamp', 'unknown')}** — {len(cache.get('results', []))} URLs checked for **{cache.get('domain', domain)}**")
     else:
-        st.warning("No cached data yet. Click **Run Check** to fetch and test all URLs.")
+        st.warning(f"No cached data for **{domain}**. Click **Run Check** to fetch and test all URLs.")
 
 with col_run:
     run_now = st.button("▶ Run Check", type="primary", use_container_width=True)
-    test_now = st.button("🧪 Test (20 URLs)", use_container_width=True)
+    test_now = st.button("Test (20 URLs)", use_container_width=True)
     if cache:
-        clear = st.button("🗑 Clear Cache", use_container_width=True)
+        clear = st.button("Clear Cache", use_container_width=True)
         if clear:
-            os.remove(CACHE_FILE)
+            os.remove(cache_file)
             st.rerun()
 
 if run_now or test_now:
-    st.write("Fetching URL list from Wayback Machine CDX API...")
+    st.write(f"Fetching URL list for **{domain}** from Wayback Machine CDX API...")
     fetch_status = st.empty()
     try:
-        urls = fetch_cdx(progress_callback=lambda n: fetch_status.text(f"Fetched {n:,} URLs so far..."))
+        urls = fetch_cdx(domain, progress_callback=lambda n: fetch_status.text(f"Fetched {n:,} URLs so far..."))
     except Exception as e:
         st.error(f"CDX fetch failed: {e}")
         st.stop()
@@ -174,10 +238,11 @@ if run_now or test_now:
     progress.empty()
 
     cache = {
+        "domain": domain,
         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
         "results": results,
     }
-    save_cache(cache)
+    save_cache(cache, cache_file)
     st.success("✓ Done!")
     st.rerun()
 
@@ -185,28 +250,31 @@ if run_now or test_now:
 if cache:
     df = pd.DataFrame(cache["results"])
     df["status_str"] = df["status"].astype(str)
+    df["status_desc"] = df["status"].apply(status_label)
     df["live"] = df["status"] == 200
 
-    live_df  = df[df["status"] == 200]
-    dead_df  = df[df["status"] != 200]
-    error_df = df[df["status_str"].str.startswith("ERROR")]
+    live_df     = df[df["status"] == 200]
+    redirect_df = df[df["status"].apply(lambda s: isinstance(s, int) and 300 <= s < 400)]
+    error_df    = df[df["status_str"].str.startswith("ERROR")]
+    dead_df     = df[~df.index.isin(live_df.index) & ~df.index.isin(redirect_df.index) & ~df.index.isin(error_df.index)]
 
     # --- Metrics ---
     st.markdown("---")
-    m1, m2, m3, m4 = st.columns(4)
+    m1, m2, m3, m4, m5 = st.columns(5)
     m1.metric("Total URLs", len(df))
     m2.metric("Live (200)", len(live_df))
-    m3.metric("Dead / Redirect", len(dead_df) - len(error_df))
-    m4.metric("Errors", len(error_df))
+    m3.metric("Redirects (3xx)", len(redirect_df))
+    m4.metric("Dead", len(dead_df))
+    m5.metric("Errors", len(error_df))
 
     st.markdown("---")
-    tab1, tab2, tab3, tab4 = st.tabs(["📋 All URLs", "✅ Live", "❌ Dead / Other", "📊 Patterns"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["All URLs", "Live", "Redirects", "Dead", "Patterns"])
 
     with tab1:
         search = st.text_input("Filter URLs", placeholder="Type to filter...", key="all_search")
         filtered = df[df["url"].str.contains(search, case=False)] if search else df
         st.dataframe(
-            filtered[["status", "url", "path", "top"]].rename(columns={"status": "Status", "url": "URL", "path": "Path", "top": "Top Segment"}),
+            filtered[["status_desc", "url", "path", "top"]].rename(columns={"status_desc": "Status", "url": "URL", "path": "Path", "top": "Top Segment"}),
             use_container_width=True,
             height=500,
         )
@@ -221,37 +289,46 @@ if cache:
         )
 
     with tab3:
-        search3 = st.text_input("Filter dead URLs", placeholder="Type to filter...", key="dead_search")
-        filtered3 = dead_df[dead_df["url"].str.contains(search3, case=False)] if search3 else dead_df
+        search3 = st.text_input("Filter redirects", placeholder="Type to filter...", key="redirect_search")
+        filtered3 = redirect_df[redirect_df["url"].str.contains(search3, case=False)] if search3 else redirect_df
         st.dataframe(
-            filtered3[["status", "url", "path"]].rename(columns={"status": "Status", "url": "URL", "path": "Path"}),
+            filtered3[["status_desc", "url", "path"]].rename(columns={"status_desc": "Status", "url": "URL", "path": "Path"}),
             use_container_width=True,
             height=500,
         )
 
     with tab4:
+        search4 = st.text_input("Filter dead URLs", placeholder="Type to filter...", key="dead_search")
+        filtered4 = dead_df[dead_df["url"].str.contains(search4, case=False)] if search4 else dead_df
+        st.dataframe(
+            filtered4[["status_desc", "url", "path"]].rename(columns={"status_desc": "Status", "url": "URL", "path": "Path"}),
+            use_container_width=True,
+            height=500,
+        )
+
+    with tab5:
         p1, p2, p3 = st.columns(3)
 
         with p1:
-            st.subheader("Top-level segments")
+            st.header("Top-level segments")
             top_counts = live_df["top"].value_counts().reset_index()
             top_counts.columns = ["Segment", "Live URLs"]
             st.dataframe(top_counts, use_container_width=True, height=400)
 
         with p2:
-            st.subheader("Second-level paths")
+            st.header("Second-level paths")
             second_counts = live_df["second"].value_counts().head(40).reset_index()
             second_counts.columns = ["Path", "Live URLs"]
             st.dataframe(second_counts, use_container_width=True, height=400)
 
         with p3:
-            st.subheader("File extensions")
+            st.header("File extensions")
             ext_counts = live_df["ext"].value_counts().reset_index()
             ext_counts.columns = ["Extension", "Count"]
             st.dataframe(ext_counts, use_container_width=True, height=400)
 
     # --- Export ---
     st.markdown("---")
-    st.subheader("Export")
-    csv = df[["status", "url", "path", "top", "second", "ext"]].to_csv(index=False)
+    st.header("Export")
+    csv = df[["status_desc", "url", "path", "top", "second", "ext"]].rename(columns={"status_desc": "status"}).to_csv(index=False)
     st.download_button("⬇ Download CSV", csv, "url_inventory.csv", "text/csv")
