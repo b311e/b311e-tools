@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python docx_to_tagged_html.py)",
+      "Bash(pip install:*)",
+      "Bash(python -c \"from reportlab.lib.units import *; print\\(dir\\(\\)\\)\")",
+      "WebFetch(domain:docs.reportlab.com)",
+      "Bash(pip show:*)",
+      "WebFetch(domain:www.reportlab.com)",
+      "WebFetch(domain:hg.reportlab.com)",
+      "Bash(python -c \"import reportlab.pdfgen.canvas; c = reportlab.pdfgen.canvas.Canvas.__dict__; print\\([k for k in sorted\\(c.keys\\(\\)\\) if not k.startswith\\(''''__''''\\)]\\)\")",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:stackoverflow.com)",
+      "WebFetch(domain:pypi.org)",
+      "Bash(python -c \"import rlextra\")",
+      "WebFetch(domain:www.google.com)",
+      "WebFetch(domain:gist.github.com)",
+      "Bash(python \"C:/Users/Annabelle_Tracy/AppData/Local/Temp/test_tagged_pdf.py\")",
+      "Bash(python -c \":*)",
+      "Bash(python doc_to_pdf.py hb21-1110.docx output_test_2.pdf)"
+    ]
+  }
+}

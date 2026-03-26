@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install:*)",
+      "Bash(python pdf_to_word.py HB21-1110.pdf output.docx)",
+      "Bash(python -c \":*)",
+      "Bash(ls -la *.docx)",
+      "Bash(python pdf_to_word.py HB21-1110.pdf HB21-1110_output.docx)"
+    ]
+  }
+}
