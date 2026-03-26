@@ -4,18 +4,19 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SubMap</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jura:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
-
   :root {
     --bg: #0a0c0f;
     --surface: #111418;
-    --border: #1e2329;
+    --border: #2a3040;
     --accent: #00e5a0;
-    --accent2: #0077ff;
+    --accent2: #4da6ff;
     --text: #e8ecf0;
-    --muted: #5a6472;
-    --danger: #ff4d6a;
+    --muted: #94a0b0;
+    --danger: #ff6b84;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -23,7 +24,9 @@
   body {
     background: var(--bg);
     color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Jura', sans-serif;
+    font-size: 1rem;
+    line-height: 1.5;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
@@ -31,34 +34,52 @@
     padding: 40px 20px;
   }
 
+  a { color: var(--accent2); }
+  a:hover { color: var(--accent); }
+
+  :focus-visible {
+    outline: 2px solid var(--accent2);
+    outline-offset: 2px;
+  }
+
+  /* Skip link */
+  .skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--accent);
+    color: #000;
+    padding: 8px 16px;
+    font-weight: 700;
+    text-decoration: none;
+    z-index: 100;
+  }
+
+  .skip-link:focus { top: 0; }
+
   header {
     width: 100%;
     max-width: 760px;
     margin-bottom: 36px;
   }
 
-  .logo {
-    font-family: 'Syne', sans-serif;
-    font-weight: 800;
-    font-size: 2rem;
-    letter-spacing: -1px;
+  h1 {
+    font-size: 2.1rem;
     color: var(--accent);
-    display: flex;
-    align-items: center;
-    gap: 10px;
   }
 
-  .logo span { color: var(--text); }
+  h1 span { color: var(--text); }
 
-  .tagline {
+  .subtitle {
+    font-size: 0.8rem;
     color: var(--muted);
-    font-size: 0.72rem;
-    margin-top: 4px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.1em;
     text-transform: uppercase;
+    margin-top: 6px;
   }
 
-  .search-box {
+  /* Search */
+  .search-form {
     width: 100%;
     max-width: 760px;
     display: flex;
@@ -66,90 +87,166 @@
     margin-bottom: 24px;
   }
 
-  input[type="text"] {
+  .search-form label {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .label-text {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  input[type="text"] {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 6px;
     color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Jura', sans-serif;
     font-size: 0.9rem;
     padding: 12px 16px;
-    outline: none;
-    transition: border-color 0.2s;
   }
 
-  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]:focus-visible {
+    outline: none;
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 2px rgba(77, 166, 255, 0.4);
+  }
+
   input[type="text"]::placeholder { color: var(--muted); }
 
-  button.scan-btn {
+  button {
+    font-family: 'Jura', sans-serif;
+    font-weight: inherit;
+    cursor: pointer;
+  }
+
+  .scan-btn {
     background: var(--accent);
     border: none;
     border-radius: 6px;
     color: #000;
-    cursor: pointer;
-    font-family: 'Syne', sans-serif;
     font-weight: 700;
     font-size: 0.85rem;
     letter-spacing: 0.05em;
     padding: 12px 24px;
     text-transform: uppercase;
-    transition: opacity 0.15s, transform 0.1s;
+    align-self: flex-end;
     white-space: nowrap;
   }
 
-  button.scan-btn:hover { opacity: 0.85; transform: translateY(-1px); }
-  button.scan-btn:active { transform: translateY(0); }
-  button.scan-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .scan-btn:hover { opacity: 0.85; }
+  .scan-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
+  /* Status */
   .status-bar {
     width: 100%;
     max-width: 760px;
-    font-size: 0.72rem;
+    font-size: 0.8rem;
     color: var(--muted);
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    min-height: 20px;
+    min-height: 24px;
   }
 
-  .status-bar .label { color: var(--accent); }
+  .status-badge {
+    display: inline-block;
+    background: rgba(0, 229, 160, 0.1);
+    border: 1px solid rgba(0, 229, 160, 0.25);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-right: 8px;
+  }
 
-  .filter-row {
+  .status-badge.error {
+    background: rgba(255, 107, 132, 0.1);
+    border-color: rgba(255, 107, 132, 0.25);
+    color: var(--danger);
+  }
+
+  /* Progress — native <progress> element */
+  progress {
+    width: 100%;
+    max-width: 760px;
+    height: 4px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: 2px;
+    background: var(--border);
+    display: none;
+  }
+
+  progress::-webkit-progress-bar { background: var(--border); border-radius: 2px; }
+  progress::-webkit-progress-value { background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; }
+  progress::-moz-progress-bar { background: linear-gradient(90deg, var(--accent2), var(--accent)); border-radius: 2px; }
+
+  /* Filter controls */
+  fieldset.filter-row {
     width: 100%;
     max-width: 760px;
     display: flex;
     gap: 8px;
     margin-bottom: 16px;
     flex-wrap: wrap;
+    align-items: end;
+    border: none;
+    padding: 0;
   }
 
-  .filter-row input {
+  .visually-hidden,
+  fieldset.filter-row > legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .filter-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .filter-row label:first-of-type {
     flex: 1;
     min-width: 160px;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    padding: 8px 12px;
-    outline: none;
   }
 
-  .filter-row input:focus { border-color: var(--accent2); }
+  .filter-row input[type="text"] {
+    font-size: 0.8rem;
+    padding: 8px 12px;
+    border-radius: 4px;
+  }
 
   .filter-row select {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
+    font-family: 'Jura', sans-serif;
+    font-size: 0.8rem;
     padding: 8px 12px;
-    outline: none;
     cursor: pointer;
+  }
+
+  .filter-row select:focus-visible {
+    outline: none;
+    border-color: var(--accent2);
+    box-shadow: 0 0 0 2px rgba(77, 166, 255, 0.4);
   }
 
   .btn-sm {
@@ -157,21 +254,20 @@
     border: 1px solid var(--border);
     border-radius: 4px;
     color: var(--muted);
-    cursor: pointer;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     padding: 8px 12px;
-    transition: border-color 0.15s, color 0.15s;
+    align-self: flex-end;
   }
 
   .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
 
-  .results-container {
+  /* Results — uses native <details>/<summary> */
+  main {
     width: 100%;
     max-width: 760px;
   }
 
-  .result-entry {
+  details {
     border: 1px solid var(--border);
     border-radius: 6px;
     margin-bottom: 8px;
@@ -182,17 +278,24 @@
 
   @keyframes fadeIn { to { opacity: 1; } }
 
-  .result-header {
+  @media (prefers-reduced-motion: reduce) {
+    details { animation: none; opacity: 1; }
+  }
+
+  summary {
     display: flex;
     align-items: center;
     gap: 12px;
     padding: 10px 14px;
     background: var(--surface);
     cursor: pointer;
-    user-select: none;
+    list-style: none;
+    font-size: 0.85rem;
   }
 
-  .result-header:hover { background: #161a1f; }
+  summary::-webkit-details-marker { display: none; }
+  summary::marker { display: none; content: ""; }
+  summary:hover { background: #1a1e24; }
 
   .dot {
     width: 7px; height: 7px;
@@ -201,22 +304,28 @@
     flex-shrink: 0;
   }
 
+  .dot.apex { background: var(--accent2); }
+
   .domain-name {
     flex: 1;
-    font-size: 0.85rem;
-    color: var(--text);
     word-break: break-all;
   }
 
-  .domain-name a { color: inherit; text-decoration: none; }
-  .domain-name a:hover { color: var(--accent); }
+  .domain-name a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: var(--border);
+    text-underline-offset: 2px;
+  }
+
+  .domain-name a:hover { color: var(--accent); text-decoration-color: var(--accent); }
 
   .issuer-tag {
     background: #0d1a12;
     border: 1px solid #1a3326;
     border-radius: 3px;
-    color: #4db87a;
-    font-size: 0.65rem;
+    color: #6fd89a;
+    font-size: 0.75rem;
     padding: 2px 7px;
     white-space: nowrap;
     flex-shrink: 0;
@@ -225,122 +334,125 @@
   .cert-detail {
     background: #0d0f12;
     border-top: 1px solid var(--border);
-    display: none;
-    font-size: 0.72rem;
-    color: var(--muted);
+    font-size: 0.8rem;
     padding: 10px 14px 10px 33px;
     line-height: 1.8;
   }
 
-  .cert-detail.open { display: block; }
-  .cert-detail .kv { display: flex; gap: 8px; }
-  .cert-detail .k { color: #3a4452; min-width: 90px; }
-  .cert-detail .v { color: #8a9aaa; }
+  .cert-detail dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 2px 12px;
+  }
+
+  .cert-detail dt { color: var(--muted); font-weight: 700; }
+  .cert-detail dd { color: #c0ccda; margin: 0; }
 
   .empty-state {
     text-align: center;
     padding: 60px 20px;
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     line-height: 2;
   }
 
+  .results-heading {
+    font-size: 0.75rem;
+    color: var(--muted);
+    font-weight: 400;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+
   .empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
-
-  .progress-bar-wrap {
-    width: 100%;
-    max-width: 760px;
-    height: 2px;
-    background: var(--border);
-    border-radius: 2px;
-    margin-bottom: 20px;
-    overflow: hidden;
-    display: none;
-  }
-
-  .progress-bar {
-    height: 100%;
-    background: linear-gradient(90deg, var(--accent2), var(--accent));
-    width: 0%;
-    transition: width 0.3s ease;
-    border-radius: 2px;
-  }
 
   .source-note {
     width: 100%;
     max-width: 760px;
     background: #0a1020;
-    border: 1px solid #0d1e3a;
+    border: 1px solid #1a3360;
     border-radius: 4px;
-    color: #3a6090;
-    font-size: 0.68rem;
+    color: #8aaad0;
+    font-size: 0.9rem;
     padding: 8px 14px;
-    margin-bottom: 20px;
+    margin-bottom: 36px;
     line-height: 1.6;
   }
 
-  .source-note strong { color: #5580b0; }
+  .source-note strong { color: #a0c0e0; }
 
   .count-badge {
     background: #0d1a12;
     border: 1px solid #1a3326;
     border-radius: 10px;
     color: var(--accent);
-    font-size: 0.68rem;
+    font-size: 0.75rem;
     padding: 2px 8px;
   }
 </style>
 </head>
 <body>
 
+<a href="#results" class="skip-link">Skip to results</a>
+
 <header>
-  <div class="logo">Sub<span>Map</span></div>
-  <div class="tagline">Certificate Transparency · Subdomain Discovery</div>
+  <h1>Sub<span>Map</span></h1>
+  <p class="subtitle">Subdomain Discovery via Certificate Transparency Logs</p>
 </header>
 
-<div class="source-note">
+<p class="source-note">
   <strong>Data source:</strong> crt.sh (Certificate Transparency logs). Results show all subdomains that have ever had a TLS certificate issued. No server access required.
-</div>
+</p>
 
-<div class="search-box">
-  <input type="text" id="domainInput" placeholder="example.com" autocomplete="off" spellcheck="false" />
-  <button class="scan-btn" id="scanBtn" onclick="scan()">Scan</button>
-</div>
+<form class="search-form" id="searchForm" onsubmit="scan(); return false;">
+  <label>
+    <span class="label-text">Domain</span>
+    <input type="text" id="domainInput" placeholder="example.com" autocomplete="off" spellcheck="false" required />
+  </label>
+  <button type="submit" class="scan-btn" id="scanBtn">Scan</button>
+</form>
 
-<div class="progress-bar-wrap" id="progressWrap">
-  <div class="progress-bar" id="progressBar"></div>
-</div>
+<label for="progressBar" class="visually-hidden">Scan progress</label>
+<progress id="progressBar" max="100" value="0">0%</progress>
 
 <div class="status-bar">
-  <span id="statusText"></span>
-  <span id="countBadge"></span>
+  <output id="statusText"></output>
+  <output id="countBadge"></output>
 </div>
 
-<div class="filter-row" id="filterRow" style="display:none">
-  <input type="text" id="filterInput" placeholder="filter results…" oninput="applyFilter()" />
-  <select id="sortSelect" onchange="applyFilter()">
-    <option value="alpha">A→Z</option>
-    <option value="zalpha">Z→A</option>
-    <option value="newest">Newest first</option>
-    <option value="oldest">Oldest first</option>
-  </select>
-  <button class="btn-sm" onclick="copyAll()">Copy all</button>
-  <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
-</div>
+<fieldset class="filter-row" id="filterRow" style="display:none">
+  <legend>Filter and sort results</legend>
+  <label>
+    <span class="label-text">Filter</span>
+    <input type="text" id="filterInput" placeholder="filter results..." oninput="applyFilter()" />
+  </label>
+  <label>
+    <span class="label-text">Sort</span>
+    <select id="sortSelect" onchange="applyFilter()">
+      <option value="alpha">A-Z</option>
+      <option value="zalpha">Z-A</option>
+      <option value="newest">Newest first</option>
+      <option value="oldest">Oldest first</option>
+    </select>
+  </label>
+  <button type="button" class="btn-sm" onclick="copyAll()">Copy all</button>
+  <button type="button" class="btn-sm" onclick="exportCSV()">Export CSV</button>
+</fieldset>
 
-<div class="results-container" id="results">
-  <div class="empty-state">
-    <div class="icon">⬡</div>
-    Enter a domain above and hit Scan
-  </div>
-</div>
+<main id="results" aria-label="Scan results">
+  <div class="empty-state"><div class="icon" aria-hidden="true">&#x2B21;</div>Enter a domain above and hit Scan</div>
+</main>
 
 <script>
   let allEntries = [];
 
-  document.getElementById('domainInput').addEventListener('keydown', e => {
-    if (e.key === 'Enter') scan();
-  });
+  function setProgress(pct) {
+    const bar = document.getElementById('progressBar');
+    bar.value = pct;
+    bar.textContent = pct + '%';
+    bar.style.display = pct > 0 && pct < 100 ? 'block' : 'none';
+  }
 
   async function scan() {
     const raw = document.getElementById('domainInput').value.trim().toLowerCase();
@@ -350,8 +462,6 @@
     const btn = document.getElementById('scanBtn');
     const status = document.getElementById('statusText');
     const results = document.getElementById('results');
-    const progressWrap = document.getElementById('progressWrap');
-    const progressBar = document.getElementById('progressBar');
     const filterRow = document.getElementById('filterRow');
 
     btn.disabled = true;
@@ -359,22 +469,20 @@
     results.innerHTML = '';
     filterRow.style.display = 'none';
     document.getElementById('countBadge').innerHTML = '';
-    status.innerHTML = `<span class="label">SCANNING</span> ${domain}…`;
+    status.innerHTML = '<span class="status-badge">Scanning</span>' + domain;
 
-    progressWrap.style.display = 'block';
-    progressBar.style.width = '15%';
+    setProgress(15);
 
     try {
-      const url = `https://crt.sh/?q=%.${domain}&output=json`;
-      progressBar.style.width = '40%';
+      const url = 'https://crt.sh/?q=%.' + domain + '&output=json';
+      setProgress(40);
 
       const res = await fetch(url);
-      progressBar.style.width = '70%';
+      setProgress(70);
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
-
-      progressBar.style.width = '90%';
+      setProgress(90);
 
       const seen = new Map();
       for (const cert of data) {
@@ -397,24 +505,23 @@
       }
 
       allEntries = [...seen.values()].sort((a, b) => a.domain.localeCompare(b.domain));
-      progressBar.style.width = '100%';
-
-      setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 500);
+      setProgress(100);
+      setTimeout(() => setProgress(0), 400);
 
       if (allEntries.length === 0) {
-        status.innerHTML = `<span style="color:var(--danger)">No certificates found for ${domain}</span>`;
-        results.innerHTML = '<div class="empty-state"><div class="icon">∅</div>No subdomains found in CT logs</div>';
+        status.innerHTML = '<span class="status-badge error">No results</span>' + domain;
+        results.innerHTML = '<div class="empty-state"><div class="icon" aria-hidden="true">\u2205</div>No subdomains found in CT logs</div>';
       } else {
         filterRow.style.display = 'flex';
-        status.innerHTML = `<span class="label">DONE</span> ${domain}`;
+        status.innerHTML = '<span class="status-badge">Done</span>' + domain;
         renderEntries(allEntries);
-        document.getElementById('countBadge').innerHTML = `<span class="count-badge">${allEntries.length} subdomains</span>`;
+        document.getElementById('countBadge').innerHTML = '<span class="count-badge">' + allEntries.length + ' subdomains</span>';
       }
 
     } catch (err) {
-      progressWrap.style.display = 'none';
-      status.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
-      results.innerHTML = `<div class="empty-state"><div class="icon">✕</div>Failed to fetch data.<br><span style="font-size:0.65rem">crt.sh may be rate-limiting or unreachable. Try again shortly.</span></div>`;
+      setProgress(0);
+      status.innerHTML = '<span class="status-badge error">Error</span>' + err.message;
+      results.innerHTML = '<div class="empty-state"><div class="icon" aria-hidden="true">\u2715</div>Failed to fetch data. crt.sh may be rate-limiting or unreachable. Try again shortly.</div>';
     }
 
     btn.disabled = false;
@@ -422,35 +529,38 @@
 
   function renderEntries(entries) {
     const results = document.getElementById('results');
+    const inputDomain = document.getElementById('domainInput').value.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
     results.innerHTML = '';
+
+    const heading = document.createElement('h2');
+    heading.className = 'results-heading';
+    heading.textContent = entries.length + ' subdomains for ' + inputDomain;
+    results.appendChild(heading);
+
     entries.forEach((entry, i) => {
-      const div = document.createElement('div');
-      div.className = 'result-entry';
-      div.style.animationDelay = `${Math.min(i * 18, 300)}ms`;
+      const el = document.createElement('details');
+      el.style.animationDelay = Math.min(i * 18, 300) + 'ms';
 
-      const isApex = entry.domain === document.getElementById('domainInput').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+      const isApex = entry.domain === inputDomain;
 
-      div.innerHTML = `
-        <div class="result-header" onclick="toggleDetail(this)">
-          <div class="dot" style="${isApex ? 'background:var(--accent2)' : ''}"></div>
-          <div class="domain-name">
-            <a href="https://${entry.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${entry.domain}</a>
-          </div>
-          <div class="issuer-tag">${entry.issuerName.substring(0, 22)}</div>
-        </div>
-        <div class="cert-detail">
-          <div class="kv"><span class="k">not_before</span><span class="v">${entry.notBefore || '—'}</span></div>
-          <div class="kv"><span class="k">not_after</span><span class="v">${entry.notAfter || '—'}</span></div>
-          <div class="kv"><span class="k">serial</span><span class="v">${entry.serial || '—'}</span></div>
-          <div class="kv"><span class="k">crt.sh</span><span class="v"><a href="https://crt.sh/?id=${entry.id}" target="_blank" style="color:var(--accent2)">view cert #${entry.id}</a></span></div>
-        </div>
-      `;
-      results.appendChild(div);
+      el.innerHTML =
+        '<summary>' +
+          '<span class="dot' + (isApex ? ' apex' : '') + '" aria-hidden="true"></span>' +
+          '<span class="domain-name">' + entry.domain + '</span>' +
+          '<span class="issuer-tag">' + entry.issuerName.substring(0, 22) + '</span>' +
+        '</summary>' +
+        '<div class="cert-detail">' +
+          '<dl>' +
+            '<dt>Visit</dt><dd><a href="https://' + entry.domain + '" target="_blank" rel="noopener noreferrer">' + entry.domain + ' (opens in new tab)</a></dd>' +
+            '<dt>Not before</dt><dd>' + (entry.notBefore || '\u2014') + '</dd>' +
+            '<dt>Not after</dt><dd>' + (entry.notAfter || '\u2014') + '</dd>' +
+            '<dt>Serial</dt><dd>' + (entry.serial || '\u2014') + '</dd>' +
+            '<dt>crt.sh</dt><dd><a href="https://crt.sh/?id=' + entry.id + '" target="_blank" rel="noopener noreferrer">view cert #' + entry.id + ' (opens in new tab)</a></dd>' +
+          '</dl>' +
+        '</div>';
+
+      results.appendChild(el);
     });
-  }
-
-  function toggleDetail(header) {
-    header.nextElementSibling.classList.toggle('open');
   }
 
   function applyFilter() {
@@ -463,23 +573,38 @@
     else if (sort === 'oldest') filtered.sort((a, b) => new Date(a.notBefore) - new Date(b.notBefore));
     else filtered.sort((a, b) => a.domain.localeCompare(b.domain));
 
-    document.getElementById('countBadge').innerHTML = `<span class="count-badge">${filtered.length} subdomains</span>`;
+    document.getElementById('countBadge').innerHTML = '<span class="count-badge">' + filtered.length + ' subdomains</span>';
     renderEntries(filtered);
   }
 
   function copyAll() {
     const text = allEntries.map(e => e.domain).join('\n');
     navigator.clipboard.writeText(text).then(() => {
-      const btns = document.querySelectorAll('.btn-sm');
-      btns[0].textContent = 'Copied!';
-      setTimeout(() => btns[0].textContent = 'Copy all', 1500);
+      const btn = document.querySelectorAll('.btn-sm')[0];
+      btn.textContent = 'Copied!';
+      announce('Copied ' + allEntries.length + ' subdomains to clipboard');
+      setTimeout(() => btn.textContent = 'Copy all', 1500);
     });
+  }
+
+  function announce(message) {
+    var el = document.getElementById('live-announce');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'live-announce';
+      el.setAttribute('role', 'status');
+      el.setAttribute('aria-live', 'polite');
+      el.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0';
+      document.body.appendChild(el);
+    }
+    el.textContent = '';
+    setTimeout(() => { el.textContent = message; }, 100);
   }
 
   function exportCSV() {
     const rows = [['domain', 'issuer', 'not_before', 'not_after', 'serial', 'crt_id']];
     allEntries.forEach(e => rows.push([e.domain, e.issuerName, e.notBefore, e.notAfter, e.serial, e.id]));
-    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const csv = rows.map(r => r.map(v => '"' + v + '"').join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
