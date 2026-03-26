@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SubMap</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;700;800&display=swap');
+
+  :root {
+    --bg: #0a0c0f;
+    --surface: #111418;
+    --border: #1e2329;
+    --accent: #00e5a0;
+    --accent2: #0077ff;
+    --text: #e8ecf0;
+    --muted: #5a6472;
+    --danger: #ff4d6a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 760px;
+    margin-bottom: 36px;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 2rem;
+    letter-spacing: -1px;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo span { color: var(--text); }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 0.72rem;
+    margin-top: 4px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .search-box {
+    width: 100%;
+    max-width: 760px;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+
+  input[type="text"] {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    padding: 12px 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  button.scan-btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 6px;
+    color: #000;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    padding: 12px 24px;
+    text-transform: uppercase;
+    transition: opacity 0.15s, transform 0.1s;
+    white-space: nowrap;
+  }
+
+  button.scan-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+  button.scan-btn:active { transform: translateY(0); }
+  button.scan-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .status-bar {
+    width: 100%;
+    max-width: 760px;
+    font-size: 0.72rem;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    min-height: 20px;
+  }
+
+  .status-bar .label { color: var(--accent); }
+
+  .filter-row {
+    width: 100%;
+    max-width: 760px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .filter-row input {
+    flex: 1;
+    min-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    padding: 8px 12px;
+    outline: none;
+  }
+
+  .filter-row input:focus { border-color: var(--accent2); }
+
+  .filter-row select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    padding: 8px 12px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .btn-sm {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    padding: 8px 12px;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+  .results-container {
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .result-entry {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    animation: fadeIn 0.2s ease forwards;
+    opacity: 0;
+  }
+
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--surface);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .result-header:hover { background: #161a1f; }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .domain-name {
+    flex: 1;
+    font-size: 0.85rem;
+    color: var(--text);
+    word-break: break-all;
+  }
+
+  .domain-name a { color: inherit; text-decoration: none; }
+  .domain-name a:hover { color: var(--accent); }
+
+  .issuer-tag {
+    background: #0d1a12;
+    border: 1px solid #1a3326;
+    border-radius: 3px;
+    color: #4db87a;
+    font-size: 0.65rem;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .cert-detail {
+    background: #0d0f12;
+    border-top: 1px solid var(--border);
+    display: none;
+    font-size: 0.72rem;
+    color: var(--muted);
+    padding: 10px 14px 10px 33px;
+    line-height: 1.8;
+  }
+
+  .cert-detail.open { display: block; }
+  .cert-detail .kv { display: flex; gap: 8px; }
+  .cert-detail .k { color: #3a4452; min-width: 90px; }
+  .cert-detail .v { color: #8a9aaa; }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    font-size: 0.8rem;
+    line-height: 2;
+  }
+
+  .empty-state .icon { font-size: 2rem; margin-bottom: 12px; }
+
+  .progress-bar-wrap {
+    width: 100%;
+    max-width: 760px;
+    height: 2px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 2px;
+  }
+
+  .source-note {
+    width: 100%;
+    max-width: 760px;
+    background: #0a1020;
+    border: 1px solid #0d1e3a;
+    border-radius: 4px;
+    color: #3a6090;
+    font-size: 0.68rem;
+    padding: 8px 14px;
+    margin-bottom: 20px;
+    line-height: 1.6;
+  }
+
+  .source-note strong { color: #5580b0; }
+
+  .count-badge {
+    background: #0d1a12;
+    border: 1px solid #1a3326;
+    border-radius: 10px;
+    color: var(--accent);
+    font-size: 0.68rem;
+    padding: 2px 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Sub<span>Map</span></div>
+  <div class="tagline">Certificate Transparency · Subdomain Discovery</div>
+</header>
+
+<div class="source-note">
+  <strong>Data source:</strong> crt.sh (Certificate Transparency logs). Results show all subdomains that have ever had a TLS certificate issued. No server access required.
+</div>
+
+<div class="search-box">
+  <input type="text" id="domainInput" placeholder="example.com" autocomplete="off" spellcheck="false" />
+  <button class="scan-btn" id="scanBtn" onclick="scan()">Scan</button>
+</div>
+
+<div class="progress-bar-wrap" id="progressWrap">
+  <div class="progress-bar" id="progressBar"></div>
+</div>
+
+<div class="status-bar">
+  <span id="statusText"></span>
+  <span id="countBadge"></span>
+</div>
+
+<div class="filter-row" id="filterRow" style="display:none">
+  <input type="text" id="filterInput" placeholder="filter results…" oninput="applyFilter()" />
+  <select id="sortSelect" onchange="applyFilter()">
+    <option value="alpha">A→Z</option>
+    <option value="zalpha">Z→A</option>
+    <option value="newest">Newest first</option>
+    <option value="oldest">Oldest first</option>
+  </select>
+  <button class="btn-sm" onclick="copyAll()">Copy all</button>
+  <button class="btn-sm" onclick="exportCSV()">Export CSV</button>
+</div>
+
+<div class="results-container" id="results">
+  <div class="empty-state">
+    <div class="icon">⬡</div>
+    Enter a domain above and hit Scan
+  </div>
+</div>
+
+<script>
+  let allEntries = [];
+
+  document.getElementById('domainInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') scan();
+  });
+
+  async function scan() {
+    const raw = document.getElementById('domainInput').value.trim().toLowerCase();
+    if (!raw) return;
+
+    const domain = raw.replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    const btn = document.getElementById('scanBtn');
+    const status = document.getElementById('statusText');
+    const results = document.getElementById('results');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressBar = document.getElementById('progressBar');
+    const filterRow = document.getElementById('filterRow');
+
+    btn.disabled = true;
+    allEntries = [];
+    results.innerHTML = '';
+    filterRow.style.display = 'none';
+    document.getElementById('countBadge').innerHTML = '';
+    status.innerHTML = `<span class="label">SCANNING</span> ${domain}…`;
+
+    progressWrap.style.display = 'block';
+    progressBar.style.width = '15%';
+
+    try {
+      const url = `https://crt.sh/?q=%.${domain}&output=json`;
+      progressBar.style.width = '40%';
+
+      const res = await fetch(url);
+      progressBar.style.width = '70%';
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      progressBar.style.width = '90%';
+
+      const seen = new Map();
+      for (const cert of data) {
+        const names = cert.name_value.split('\n');
+        for (const name of names) {
+          const clean = name.trim().toLowerCase().replace(/^\*\./, '');
+          if (!clean || !clean.endsWith(domain)) continue;
+          if (!seen.has(clean)) {
+            seen.set(clean, {
+              domain: clean,
+              issuer: cert.issuer_ca_id,
+              issuerName: (cert.issuer_name || '').replace(/.*CN=/, '').split(',')[0].trim() || 'Unknown',
+              notBefore: cert.not_before,
+              notAfter: cert.not_after,
+              serial: cert.serial_number,
+              id: cert.id
+            });
+          }
+        }
+      }
+
+      allEntries = [...seen.values()].sort((a, b) => a.domain.localeCompare(b.domain));
+      progressBar.style.width = '100%';
+
+      setTimeout(() => { progressWrap.style.display = 'none'; progressBar.style.width = '0%'; }, 500);
+
+      if (allEntries.length === 0) {
+        status.innerHTML = `<span style="color:var(--danger)">No certificates found for ${domain}</span>`;
+        results.innerHTML = '<div class="empty-state"><div class="icon">∅</div>No subdomains found in CT logs</div>';
+      } else {
+        filterRow.style.display = 'flex';
+        status.innerHTML = `<span class="label">DONE</span> ${domain}`;
+        renderEntries(allEntries);
+        document.getElementById('countBadge').innerHTML = `<span class="count-badge">${allEntries.length} subdomains</span>`;
+      }
+
+    } catch (err) {
+      progressWrap.style.display = 'none';
+      status.innerHTML = `<span style="color:var(--danger)">Error: ${err.message}</span>`;
+      results.innerHTML = `<div class="empty-state"><div class="icon">✕</div>Failed to fetch data.<br><span style="font-size:0.65rem">crt.sh may be rate-limiting or unreachable. Try again shortly.</span></div>`;
+    }
+
+    btn.disabled = false;
+  }
+
+  function renderEntries(entries) {
+    const results = document.getElementById('results');
+    results.innerHTML = '';
+    entries.forEach((entry, i) => {
+      const div = document.createElement('div');
+      div.className = 'result-entry';
+      div.style.animationDelay = `${Math.min(i * 18, 300)}ms`;
+
+      const isApex = entry.domain === document.getElementById('domainInput').value.trim().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+
+      div.innerHTML = `
+        <div class="result-header" onclick="toggleDetail(this)">
+          <div class="dot" style="${isApex ? 'background:var(--accent2)' : ''}"></div>
+          <div class="domain-name">
+            <a href="https://${entry.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${entry.domain}</a>
+          </div>
+          <div class="issuer-tag">${entry.issuerName.substring(0, 22)}</div>
+        </div>
+        <div class="cert-detail">
+          <div class="kv"><span class="k">not_before</span><span class="v">${entry.notBefore || '—'}</span></div>
+          <div class="kv"><span class="k">not_after</span><span class="v">${entry.notAfter || '—'}</span></div>
+          <div class="kv"><span class="k">serial</span><span class="v">${entry.serial || '—'}</span></div>
+          <div class="kv"><span class="k">crt.sh</span><span class="v"><a href="https://crt.sh/?id=${entry.id}" target="_blank" style="color:var(--accent2)">view cert #${entry.id}</a></span></div>
+        </div>
+      `;
+      results.appendChild(div);
+    });
+  }
+
+  function toggleDetail(header) {
+    header.nextElementSibling.classList.toggle('open');
+  }
+
+  function applyFilter() {
+    const q = document.getElementById('filterInput').value.toLowerCase();
+    const sort = document.getElementById('sortSelect').value;
+    let filtered = allEntries.filter(e => e.domain.includes(q));
+
+    if (sort === 'zalpha') filtered.sort((a, b) => b.domain.localeCompare(a.domain));
+    else if (sort === 'newest') filtered.sort((a, b) => new Date(b.notBefore) - new Date(a.notBefore));
+    else if (sort === 'oldest') filtered.sort((a, b) => new Date(a.notBefore) - new Date(b.notBefore));
+    else filtered.sort((a, b) => a.domain.localeCompare(b.domain));
+
+    document.getElementById('countBadge').innerHTML = `<span class="count-badge">${filtered.length} subdomains</span>`;
+    renderEntries(filtered);
+  }
+
+  function copyAll() {
+    const text = allEntries.map(e => e.domain).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      const btns = document.querySelectorAll('.btn-sm');
+      btns[0].textContent = 'Copied!';
+      setTimeout(() => btns[0].textContent = 'Copy all', 1500);
+    });
+  }
+
+  function exportCSV() {
+    const rows = [['domain', 'issuer', 'not_before', 'not_after', 'serial', 'crt_id']];
+    allEntries.forEach(e => rows.push([e.domain, e.issuerName, e.notBefore, e.notAfter, e.serial, e.id]));
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'subdomains.csv';
+    a.click();
+  }
+</script>
+</body>
+</html>
