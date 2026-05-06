@@ -1,0 +1,8 @@
+http://www.leg.state.co.us/public/display.nsf/alldisp.html
+http://www.leg.state.co.us/public/display.nsf/ccdisp.html
+http://www.leg.state.co.us/public/display.nsf/lpdisp.html
+http://www.leg.state.co.us/public/display.nsf/ccdisphou.html
+http://www.leg.state.co.us/public/display.nsf/lpdisphou.html
+http://www.leg.state.co.us/public/display.nsf/lphousechamber.html
+http://www.leg.state.co.us/public/display.nsf/ccdispsen.html
+http://www.leg.state.co.us/public/display.nsf/lpdispsen.html
