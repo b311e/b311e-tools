@@ -1,5 +1,5 @@
 """
-CLICS URL Inventory Dashboard
+URL Inventory Dashboard
 Run with: streamlit run dashboard.py
 """
 
